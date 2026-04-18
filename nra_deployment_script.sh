@@ -60,31 +60,31 @@ if [ -n "$AZURE_ENDPOINT" ] && [ -n "$AZURE_DEPLOYMENT" ]; then
     
     # Extract account name from endpoint
     ACCOUNT_NAME=$(echo "$AZURE_ENDPOINT" | sed -n 's|https://\([^\.]*\).*|\1|p')
-    RESOURCE_GROUP=$(az cognitiveservices account show --name "$ACCOUNT_NAME" --query resourceGroup -o tsv 2>/dev/null)
+    RESOURCE_GROUP=$(az cognitiveservices account show --name "$ACCOUNT_NAME" --query resourceGroup -o tsv 2>/dev/null || true)
     
     if [ -n "$RESOURCE_GROUP" ]; then
         # Check if deployment exists
-        DEPLOYMENT_EXISTS=$(az cognitiveservices account deployment show --name "$ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP" --deployment-name "$AZURE_DEPLOYMENT" --query name -o tsv 2>/dev/null)
+        DEPLOYMENT_EXISTS=$(az cognitiveservices account deployment show --name "$ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP" --deployment-name "$AZURE_DEPLOYMENT" --query name -o tsv 2>/dev/null || true)
         
         if [ "$DEPLOYMENT_EXISTS" == "$AZURE_DEPLOYMENT" ]; then
             echo "✓ Azure OpenAI deployment '$AZURE_DEPLOYMENT' exists and is accessible"
             
             # Get deployment details
-            MODEL_VERSION=$(az cognitiveservices account deployment show --name "$ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP" --deployment-name "$AZURE_DEPLOYMENT" --query properties.model.version -o tsv 2>/dev/null)
+            MODEL_VERSION=$(az cognitiveservices account deployment show --name "$ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP" --deployment-name "$AZURE_DEPLOYMENT" --query properties.model.version -o tsv 2>/dev/null || true)
             if [ -n "$MODEL_VERSION" ]; then
                 echo "  Model version: $MODEL_VERSION"
             fi
         else
             echo "WARNING: Azure OpenAI deployment '$AZURE_DEPLOYMENT' not found in account '$ACCOUNT_NAME'"
-            echo "Please verify the deployment name in .env matches your Azure OpenAI resource"
+            echo "Deployment will proceed, but please verify the deployment name in .env matches your Azure OpenAI resource"
         fi
     else
         echo "WARNING: Could not determine resource group for Azure OpenAI account '$ACCOUNT_NAME'"
-        echo "Skipping deployment validation"
+        echo "Skipping deployment validation (deployment will proceed)"
     fi
 else
     echo "WARNING: AZURE_OPENAI_ENDPOINT or AZURE_DEPLOYMENT not set in .env"
-    echo "Skipping Azure OpenAI deployment validation"
+    echo "Skipping Azure OpenAI deployment validation (deployment will proceed)"
 fi
 
 echo "========================================"
@@ -97,14 +97,18 @@ az group show --name "$RESOURCE_GROUP" -o none || { echo "Error: Resource group 
 
 # 2. Create Storage Account & BLOB CONTAINER
 echo -e "\n[2/6] Provisioning Storage Account: $STORAGE_ACCOUNT_NAME..."
-az storage account create \
-    --name "$STORAGE_ACCOUNT_NAME" \
-    --resource-group "$RESOURCE_GROUP" \
-    --location "$LOCATION_STORAGE" \
-    --sku "$STORAGE_SKU" \
-    --min-tls-version TLS1_2 \
-    --allow-blob-public-access true \
-    -o none
+if az storage account show --name "$STORAGE_ACCOUNT_NAME" --resource-group "$RESOURCE_GROUP" -o none 2>/dev/null; then
+    echo "Storage account already exists, skipping creation"
+else
+    az storage account create \
+        --name "$STORAGE_ACCOUNT_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --location "$LOCATION_STORAGE" \
+        --sku "$STORAGE_SKU" \
+        --min-tls-version TLS1_2 \
+        --allow-blob-public-access true \
+        -o none
+fi
 
 echo "Waiting for Storage APIs to stabilize..."
 countdown 15
@@ -127,15 +131,28 @@ if [ -d "$ABS_DATA_PATH" ]; then
     az storage blob upload-batch --destination "$CONTAINER_NAME" --source "$ABS_DATA_PATH" --connection-string "$STORAGE_CONN_STR" --overwrite -o none
 fi
 
-# 3. Create Azure AI Search (Vector Database)
+# 3. Create Azure AI Search
 echo -e "\n[3/6] Provisioning Azure AI Search: $SEARCH_SERVICE_NAME..."
-az search service create --name "$SEARCH_SERVICE_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOCATION_SEARCH" --sku "$SEARCH_SKU" -o none || true
+if az search service show --name "$SEARCH_SERVICE_NAME" --resource-group "$RESOURCE_GROUP" -o none 2>/dev/null; then
+    echo "AI Search service already exists, skipping creation"
+else
+    az search service create \
+        --name "$SEARCH_SERVICE_NAME" \
+        --resource-group "$RESOURCE_GROUP" \
+        --location "$LOCATION_SEARCH" \
+        --sku "$SEARCH_SKU" \
+        -o none
+fi || true
 SEARCH_ADMIN_KEY=$(az search admin-key show --resource-group "$RESOURCE_GROUP" --service-name "$SEARCH_SERVICE_NAME" --query primaryKey -o tsv)
 SEARCH_ENDPOINT="https://${SEARCH_SERVICE_NAME}.search.windows.net/"
 
 # 4. Create Azure Container Registry (ACR)
 echo -e "\n[4/6] Provisioning ACR: $ACR_NAME..."
-az acr create --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOCATION_ACR" --sku "$ACR_SKU" --admin-enabled true -o none
+if az acr show --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" -o none 2>/dev/null; then
+    echo "ACR already exists, skipping creation"
+else
+    az acr create --name "$ACR_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOCATION_ACR" --sku "$ACR_SKU" --admin-enabled true -o none
+fi
 az acr update -n "$ACR_NAME" --admin-enabled true -o none
 
 ACR_LOGIN_SERVER=$(az acr show --name "$ACR_NAME" --query loginServer -o tsv)
@@ -151,16 +168,24 @@ docker build --platform linux/amd64 -t "$IMAGE_NAME:$IMAGE_TAG" .
 docker tag "$IMAGE_NAME:$IMAGE_TAG" "$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
 docker push "$ACR_LOGIN_SERVER/$IMAGE_NAME:$IMAGE_TAG"
 
-# 6. Create App Service & Web App
+# 6. Create App Service Plan and Web App
 echo -e "\n[6/6] Provisioning Web App: $WEB_APP_NAME..."
-az appservice plan create --name "$APP_SERVICE_PLAN_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOCATION_WEBAPP" --is-linux --sku "$WEBAPP_SKU" -o none
+if az appservice plan show --name "$APP_SERVICE_PLAN_NAME" --resource-group "$RESOURCE_GROUP" -o none 2>/dev/null; then
+    echo "App Service Plan already exists, skipping creation"
+else
+    az appservice plan create --name "$APP_SERVICE_PLAN_NAME" --resource-group "$RESOURCE_GROUP" --location "$LOCATION_WEBAPP" --is-linux --sku "$WEBAPP_SKU" -o none
+fi
 
-az webapp create \
-    --resource-group "$RESOURCE_GROUP" \
-    --plan "$APP_SERVICE_PLAN_NAME" \
-    --name "$WEB_APP_NAME" \
-    --container-image-name "mcr.microsoft.com/appsvc/staticsite:latest" \
-    -o none
+if az webapp show --name "$WEB_APP_NAME" --resource-group "$RESOURCE_GROUP" -o none 2>/dev/null; then
+    echo "Web App already exists, skipping creation"
+else
+    az webapp create \
+        --resource-group "$RESOURCE_GROUP" \
+        --plan "$APP_SERVICE_PLAN_NAME" \
+        --name "$WEB_APP_NAME" \
+        --container-image-name "mcr.microsoft.com/appsvc/staticsite:latest" \
+        -o none
+fi
 
 echo "Setting Registry Credentials and App Settings..."
 az webapp config appsettings set \
@@ -176,6 +201,16 @@ az webapp config appsettings set \
     AZURE_SEARCH_KEY="${SEARCH_ADMIN_KEY}" \
     AZURE_SEARCH_INDEX="supply-chain-index" \
     VECTOR_STORE_TYPE="azure" \
+    OPENAI_API_KEY="$(grep "^OPENAI_API_KEY=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_OPENAI_API_KEY="$(grep "^AZURE_OPENAI_API_KEY=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_OPENAI_ENDPOINT="$(grep "^AZURE_OPENAI_ENDPOINT=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_OPENAI_API_VERSION="$(grep "^AZURE_OPENAI_API_VERSION=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_DEPLOYMENT="$(grep "^AZURE_DEPLOYMENT=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_JUDGE_DEPLOYMENT="$(grep "^AZURE_JUDGE_DEPLOYMENT=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_EMBEDDING_DEPLOYMENT="$(grep "^AZURE_EMBEDDING_DEPLOYMENT=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_OPENAI_EMBEDDING_ENDPOINT="$(grep "^AZURE_OPENAI_EMBEDDING_ENDPOINT=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_OPENAI_EMBEDDING_KEY="$(grep "^AZURE_OPENAI_EMBEDDING_KEY=" .env | cut -d'=' -f2 | tr -d '"')" \
+    AZURE_OPENAI_EMBEDDING_API_VERSION="$(grep "^AZURE_OPENAI_EMBEDDING_API_VERSION=" .env | cut -d'=' -f2 | tr -d '"')" \
     -o none
 
 echo "Switching Web App to the custom ACR image..."
