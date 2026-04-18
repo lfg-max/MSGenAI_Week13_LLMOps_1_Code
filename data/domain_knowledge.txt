@@ -1,0 +1,22 @@
+Supply Chain Domain Knowledge
+
+This dataset contains supply chain transaction data including orders, sales, shipping, and inventory information.
+
+Key Metrics:
+- Sales: Total revenue from product sales
+- Profit: Revenue minus costs
+- Order Date: When the order was placed
+- Shipping Date: When the product was shipped
+- Shipping Mode: Method of shipping (Standard Class, First Class, Second Class, Same Day)
+- Customer Segment: Type of customer (Consumer, Corporate, Home Office)
+- Market: Geographic market region
+- Product Category: Category of products
+- Order Status: Current status of the order (Complete, Pending, Closed, etc.)
+
+Common Analysis Queries:
+- Sales trends over time
+- Profitability by product category
+- Shipping mode performance
+- Customer segment analysis
+- Market comparison
+- Order fulfillment rates
