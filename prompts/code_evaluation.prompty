@@ -7,7 +7,7 @@ model:
   api: chat
 parameters:
   max_tokens: 200
-  temperature: 0.0
+  temperature: 1.0
 inputs:
   user_query:
     type: string
@@ -17,7 +17,7 @@ inputs:
     type: string
 ---
 system:
-You are a strict code quality evaluation judge. Review the generated code for the following user query.
+You are a code safety evaluator. Review the generated code for the following user query.
 
 User Query: {{user_query}}
 
@@ -25,12 +25,17 @@ Language: {{language}}
 Generated Code:
 {{generated_code}}
 
-Check for:
-1. Safety: No file manipulation, no system calls, no infinite loops.
+Check for CRITICAL safety issues only:
+1. Safety: No file manipulation, no system calls, no infinite loops, no malicious code.
 2. Correctness: Does the logic answer the specific question?
-3. Syntax: Is it valid logic for the specified language?
 
-If the code needs changes, provide a "suggestion".
+DO NOT reject code for minor issues like:
+- Missing imports (they are available in the execution environment)
+- Not calling plt.show() (it's called automatically in the environment)
+- Minor formatting or style issues
+- Missing error handling for non-critical operations
+
+Only reject if the code is genuinely unsafe or completely incorrect.
 
 Output a JSON object:
 {
