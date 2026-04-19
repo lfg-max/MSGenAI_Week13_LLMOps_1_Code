@@ -1,0 +1,918 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain LLMOps - Execution Flow with File Calls</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: #1e1e30;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .layman-section {
+            background: linear-gradient(135deg, #2a2a40 0%, #1a1a2e 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 2px solid #00d4ff;
+        }
+        
+        .layman-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .layman-content {
+            color: #ccc;
+            line-height: 1.8;
+            font-size: 1.05em;
+        }
+        
+        .layman-content p {
+            margin-bottom: 15px;
+        }
+        
+        .layman-content strong {
+            color: #00ff88;
+        }
+        
+        .layman-content ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .layman-content li {
+            margin-bottom: 10px;
+        }
+        
+        .flow-section {
+            margin-bottom: 40px;
+        }
+        
+        .step {
+            background: #2a2a40;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            border-left: 5px solid #00d4ff;
+            position: relative;
+        }
+        
+        .step-number {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 40px;
+            height: 40px;
+            background: #00d4ff;
+            color: #1a1a2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.3em;
+        }
+        
+        .step-title {
+            font-size: 1.4em;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 15px;
+            margin-left: 20px;
+        }
+        
+        .step-description {
+            color: #ccc;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            margin-left: 20px;
+        }
+        
+        .file-call {
+            background: #16213e;
+            border-radius: 10px;
+            padding: 15px;
+            margin: 10px 0;
+            margin-left: 20px;
+            border: 1px solid #333;
+        }
+        
+        .file-call-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .file-icon {
+            font-size: 1.5em;
+        }
+        
+        .file-name {
+            color: #00ff88;
+            font-family: 'Courier New', monospace;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .file-action {
+            color: #ff6b6b;
+            font-size: 0.9em;
+            background: #3a1a1a;
+            padding: 3px 8px;
+            border-radius: 4px;
+        }
+        
+        .file-details {
+            color: #aaa;
+            font-size: 0.9em;
+            line-height: 1.5;
+        }
+        
+        .file-details ul {
+            margin-left: 20px;
+            margin-top: 10px;
+        }
+        
+        .file-details li {
+            margin-bottom: 5px;
+        }
+        
+        .arrow {
+            text-align: center;
+            font-size: 2em;
+            color: #00d4ff;
+            margin: 10px 0;
+        }
+        
+        .parallel-calls {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-left: 20px;
+        }
+        
+        .init-section {
+            background: linear-gradient(135deg, #2d1b4e 0%, #1a1a2e 100%);
+            border-left-color: #ff6b6b;
+        }
+        
+        .init-section .step-title {
+            color: #ff6b6b;
+        }
+        
+        .execution-section {
+            background: linear-gradient(135deg, #1b4e2d 0%, #1a1a2e 100%);
+            border-left-color: #00ff88;
+        }
+        
+        .execution-section .step-title {
+            color: #00ff88;
+        }
+        
+        .rag-section {
+            background: linear-gradient(135deg, #4e1b3d 0%, #1a1a2e 100%);
+            border-left-color: #ff00ff;
+        }
+        
+        .rag-section .step-title {
+            color: #ff00ff;
+        }
+        
+        .response-section {
+            background: linear-gradient(135deg, #4e3d1b 0%, #1a1a2e 100%);
+            border-left-color: #ffaa00;
+        }
+        
+        .response-section .step-title {
+            color: #ffaa00;
+        }
+        
+        .highlight {
+            color: #00d4ff;
+            font-weight: bold;
+        }
+        
+        .code-snippet {
+            background: #0f0f1a;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #00ff88;
+            margin-top: 10px;
+        }
+        
+        .flow-summary {
+            background: #00d4ff;
+            color: #1a1a2e;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-weight: bold;
+        }
+        
+        .flow-summary h2 {
+            margin-bottom: 15px;
+        }
+        
+        .flow-summary ul {
+            margin-left: 20px;
+        }
+        
+        .flow-summary li {
+            margin-bottom: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚛 Supply Chain LLMOps - Execution Flow</h1>
+        <p class="subtitle">Complete file call sequence from user query to response display</p>
+        
+        <div class="layman-section">
+            <div class="layman-title">📖 What This App Does (In Simple Terms)</div>
+            <div class="layman-content">
+                <p>Imagine you have a massive spreadsheet with hundreds of thousands of rows of supply chain data - orders, shipments, sales, profits, and more. Normally, you'd need to know complex data analysis tools like Excel, SQL, or Python to get answers from this data.</p>
+                
+                <p><strong>This application solves that problem</strong> by letting you ask questions in plain English, just like you'd ask a human colleague. You can type things like:</p>
+                <ul>
+                    <li>"What is the total sales?"</li>
+                    <li>"Which shipping mode has the highest profit?"</li>
+                    <li>"Show me a chart of sales over time"</li>
+                </ul>
+                
+                <p><strong>Here's how it works behind the scenes:</strong></p>
+                <ul>
+                    <li><strong>AI Understanding:</strong> The app uses AI (GPT) to understand your question in plain English</li>
+                    <li><strong>Smart Code Generation:</strong> It automatically writes the necessary code (Python or SQL) to analyze your data</li>
+                    <li><strong>Safety Check:</strong> Another AI reviews the generated code to make sure it's safe and correct before running it</li>
+                    <li><strong>Execution:</strong> The approved code runs on your data and produces results</li>
+                    <li><strong>Context Awareness:</strong> The app also retrieves relevant business knowledge (like what "late delivery risk" means) to give you better, more informed answers</li>
+                    <li><strong>Natural Response:</strong> Finally, it explains the results back to you in plain English, and can even create charts and graphs</li>
+                </ul>
+                
+                <p><strong>Think of it as having a super-smart data analyst</strong> who knows your supply chain business inside and out, can instantly write complex analysis code, and explains everything in simple language - all through a chat interface.</p>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <h2 style="color: #00d4ff; margin-bottom: 20px;">📱 Application Startup Flow</h2>
+            
+            <div class="step init-section">
+                <div class="step-number">0</div>
+                <div class="step-title">Application Initialization</div>
+                <div class="step-description">
+                    When you run <span class="code-snippet">streamlit run src/app.py</span>, the following initialization sequence occurs:
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name">src/app.py</span>
+                        <span class="file-action">ENTRY POINT</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Streamlit loads and starts the web server</li>
+                            <li>Imports: <span class="highlight">from src.chain import SupplyChainAssistant</span></li>
+                            <li>Imports: <span class="highlight">from src.config import Config</span></li>
+                            <li>Sets up UI with sidebar configuration</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">⚙️</span>
+                        <span class="file-name">src/config.py</span>
+                        <span class="file-action">IMPORTED BY app.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Loads environment variables from <span class="highlight">.env</span> file</li>
+                            <li>Configures application-wide logging</li>
+                            <li>Provides Config class with all settings (API keys, endpoints, model names)</li>
+                            <li>Validates required configuration</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">IMPORTED BY app.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Defines SupplyChainAssistant class</li>
+                            <li>Imports: DataIngestion, SQLTools, vector_store, prompts</li>
+                            <li>Not executed until user submits first query</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <h2 style="color: #00d4ff; margin-bottom: 20px;">⚡ Query Execution Flow (Per User Query)</h2>
+            
+            <div class="step">
+                <div class="step-number">1</div>
+                <div class="step-title">User Submits Query via Streamlit UI</div>
+                <div class="step-description">
+                    User types a question like "What is the total sales?" and presses Enter
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name">src/app.py</span>
+                        <span class="file-action">USER INPUT HANDLER</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 84: <span class="code-snippet">user_query = st.chat_input()</span> captures input</li>
+                            <li>Line 88: Adds message to session state</li>
+                            <li>Line 95: Calls <span class="highlight">assistant = get_assistant(overrides)</span></li>
+                            <li>Line 96: Calls <span class="highlight">result = assistant.execute_query(user_query)</span></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">get_assistant() CACHED FUNCTION</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 15-16: Returns cached SupplyChainAssistant instance</li>
+                            <li>If not cached, creates new instance with overrides</li>
+                            <li>Calls <span class="highlight">SupplyChainAssistant.__init__()</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step execution-section">
+                <div class="step-number">2</div>
+                <div class="step-title">SupplyChainAssistant Initialization (First Query Only)</div>
+                <div class="step-description">
+                    On first query, the assistant is initialized with all components
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">__init__() METHOD</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 138: <span class="highlight">self.ingestion = DataIngestion(...)</span> - Creates data loader</li>
+                            <li>Line 139: <span class="highlight">self.df = self.ingestion.load_data()</span> - Loads CSV</li>
+                            <li>Line 140: <span class="highlight">self.schema_info = self.ingestion.get_schema_info()</span> - Gets schema</li>
+                            <li>Line 144: <span class="highlight">self.python_repl = PythonREPL()</span> - Creates Python executor</li>
+                            <li>Line 148: <span class="highlight">self.sql_tools = SQLTools(self.df)</span> - Creates SQL engine</li>
+                            <li>Line 150-151: Creates LLM instances (main + judge)</li>
+                            <li>Line 152: <span class="highlight">self._setup_chains()</span> - Sets up LangChain chains</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📊</span>
+                        <span class="file-name">src/ingestion.py</span>
+                        <span class="file-action">CALLED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 20-37: <span class="highlight">load_data()</span> method</li>
+                            <li>Line 27: Loads CSV with pandas (latin-1 encoding)</li>
+                            <li>Line 29: Calls <span class="highlight">_preprocess()</span> to clean columns</li>
+                            <li>Line 32: Calls <span class="highlight">_index_documents()</span> to index domain knowledge</li>
+                            <li>Line 39-53: Chunks domain_knowledge.txt and adds to vector store</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🗄️</span>
+                        <span class="file-name">src/vector_store.py</span>
+                        <span class="file-action">CALLED BY ingestion.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 112-119: <span class="highlight">get_vector_store()</span> factory function</li>
+                            <li>Checks VECTOR_STORE_TYPE from config (chroma or azure)</li>
+                            <li>Returns ChromaVectorStore or AzureVectorStore instance</li>
+                            <li>Line 36-60: <span class="highlight">get_embeddings()</span> creates embedding model</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🗄️</span>
+                        <span class="file-name">src/sql_tools.py</span>
+                        <span class="file-action">CALLED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 9-11: <span class="highlight">__init__()</span> creates DuckDB connection</li>
+                            <li>Line 11: Registers DataFrame as "supply_chain" table</li>
+                            <li>Line 13-27: <span class="highlight">execute_query()</span> method for SQL execution</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📝</span>
+                        <span class="file-name">prompts/*.prompty</span>
+                        <span class="file-action">LOADED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 160: Loads <span class="highlight">intent_classification.prompty</span></li>
+                            <li>Line 164: Loads <span class="highlight">code_generation.prompty</span></li>
+                            <li>Line 168: Loads <span class="highlight">sql_generation.prompty</span></li>
+                            <li>Line 172: Loads <span class="highlight">code_evaluation.prompty</span></li>
+                            <li>Line 176: Loads <span class="highlight">response_synthesis.prompty</span></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step execution-section">
+                <div class="step-number">3</div>
+                <div class="step-title">Intent Classification</div>
+                <div class="step-description">
+                    Determine if query needs Python (for complex analysis/charts) or SQL (for data retrieval)
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">execute_query() - STEP 1</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 213: <span class="highlight">intent_res = self.intent_chain.invoke({"user_query": user_query})</span></li>
+                            <li>Uses intent_classification.prompty template</li>
+                            <li>Line 214: Checks if query is valid</li>
+                            <li>Line 217: Extracts language (python or sql)</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📝</span>
+                        <span class="file-name">prompts/intent_classification.prompty</span>
+                        <span class="file-action">USED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>System prompt defines valid topics (orders, shipping, financials, risk)</li>
+                            <li>Instructs LLM to output JSON with is_valid, intent, language</li>
+                            <li>Temperature: 0.1 for consistent classification</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step execution-section">
+                <div class="step-number">4</div>
+                <div class="step-title">Code Generation</div>
+                <div class="step-description">
+                    Generate Python (Pandas) or SQL (DuckDB) code based on intent
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">execute_query() - STEP 2</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 228-232: If language=python, calls <span class="highlight">self.py_gen_chain.invoke()</span></li>
+                            <li>Line 234-237: If language=sql, calls <span class="highlight">self.sql_gen_chain.invoke()</span></li>
+                            <li>Passes user_query and schema_info to prompt</li>
+                            <li>Removes markdown code block markers</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="parallel-calls">
+                    <div class="file-call">
+                        <div class="file-call-header">
+                            <span class="file-icon">📝</span>
+                            <span class="file-name">prompts/code_generation.prompty</span>
+                            <span class="file-action">IF PYTHON</span>
+                        </div>
+                        <div class="file-details">
+                            <ul>
+                                <li>Generates Pandas/Python code</li>
+                                <li>Rules: store result in 'result' variable</li>
+                                <li>For plots: assign figure to 'fig' variable</li>
+                                <li>No plt.show(), no imports</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="file-call">
+                        <div class="file-call-header">
+                            <span class="file-icon">📝</span>
+                            <span class="file-name">prompts/sql_generation.prompty</span>
+                            <span class="file-action">IF SQL</span>
+                        </div>
+                        <div class="file-details">
+                            <ul>
+                                <li>Generates DuckDB-compatible SQL</li>
+                                <li>Table name: 'supply_chain'</li>
+                                <li>No DML operations (INSERT/UPDATE/DELETE)</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step execution-section">
+                <div class="step-number">5</div>
+                <div class="step-title">LLM Judge Evaluation</div>
+                <div class="step-description">
+                    Validate generated code for safety and correctness before execution
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">execute_query() - STEP 3</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 240-242: <span class="highlight">eval_res = self.eval_chain.invoke()</span></li>
+                            <li>Passes user_query, generated_code, language to judge</li>
+                            <li>Line 244: Checks if code is safe AND correct</li>
+                            <li>Line 248-257: If rejected, retries (max 1 retry) or returns error</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📝</span>
+                        <span class="file-name">prompts/code_evaluation.prompty</span>
+                        <span class="file-action">USED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Checks for: file manipulation, system calls, infinite loops, malicious code</li>
+                            <li>Checks correctness: does logic answer the question?</li>
+                            <li>Does NOT reject for: missing imports, style issues, minor errors</li>
+                            <li>Returns JSON with is_safe, is_correct, feedback</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step execution-section">
+                <div class="step-number">6</div>
+                <div class="step-title">Code Execution</div>
+                <div class="step-description">
+                    Execute the validated code on the supply chain dataset
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">execute_query() - STEP 4</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 266-294: If language=python</li>
+                            <li>Line 274: <span class="highlight">exec(code, global_vars, local_vars)</span> executes Python</li>
+                            <li>Line 277: Extracts 'result' variable</li>
+                            <li>Line 283: Extracts 'fig' variable if plot generated</li>
+                            <li>Line 296-298: If language=sql, calls <span class="highlight">self.sql_tools.execute_query(code)</span></li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="parallel-calls">
+                    <div class="file-call">
+                        <div class="file-call-header">
+                            <span class="file-icon">🐍</span>
+                            <span class="file-name">Python REPL (Built-in)</span>
+                            <span class="file-action">IF PYTHON</span>
+                        </div>
+                        <div class="file-details">
+                            <ul>
+                                <li>LangChain's PythonREPL executes code safely</li>
+                                <li>Has access to: df, pd, plt, sns variables</li>
+                                <li>Captures output in local_vars</li>
+                            </ul>
+                        </div>
+                    </div>
+                    
+                    <div class="file-call">
+                        <div class="file-call-header">
+                            <span class="file-icon">🗄️</span>
+                            <span class="file-name">src/sql_tools.py</span>
+                            <span class="file-action">IF SQL</span>
+                        </div>
+                        <div class="file-details">
+                            <ul>
+                                <li>Line 23: <span class="highlight">self.con.execute(query).df()</span></li>
+                                <li>Executes SQL on DuckDB in-memory database</li>
+                                <li>Returns result as pandas DataFrame</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step rag-section">
+                <div class="step-number">7</div>
+                <div class="step-title">Vector Retrieval (RAG)</div>
+                <div class="step-description">
+                    Retrieve relevant domain knowledge from vector store to provide context
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">execute_query() - STEP 5</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 309: <span class="highlight">docs = self.ingestion.vector_store.similarity_search(user_query, k=2)</span></li>
+                            <li>Line 310: Joins document page_content into context_text</li>
+                            <li>Retrieves top 2 most relevant documents</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🗄️</span>
+                        <span class="file-name">src/vector_store.py</span>
+                        <span class="file-action">CALLED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 87-88: ChromaVectorStore.similarity_search()</li>
+                            <li>OR Line 108-109: AzureVectorStore.similarity_search()</li>
+                            <li>Performs semantic search using embeddings</li>
+                            <li>Returns list of Document objects</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📊</span>
+                        <span class="file-name">data/domain_knowledge.txt</span>
+                        <span class="file-action">SOURCE OF RETRIEVED CONTENT</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Contains supply chain domain definitions</li>
+                            <li>Key metrics, business rules, common analysis patterns</li>
+                            <li>Chunked and indexed during initialization</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step response-section">
+                <div class="step-number">8</div>
+                <div class="step-title">Response Synthesis</div>
+                <div class="step-description">
+                    Combine execution results with retrieved context into natural language answer
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">🔄</span>
+                        <span class="file-name">src/chain.py</span>
+                        <span class="file-action">execute_query() - STEP 6</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 317-323: <span class="highlight">final_response = self.response_chain.invoke()</span></li>
+                            <li>Passes: user_query, data_result (truncated), context</li>
+                            <li>Line 324: Returns dict with response, code, data</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="arrow">↓</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📝</span>
+                        <span class="file-name">prompts/response_synthesis.prompty</span>
+                        <span class="file-action">USED BY chain.py</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Instructs LLM to formulate clear, concise answer</li>
+                            <li>Summarize key findings for table/dataframe results</li>
+                            <li>Use retrieved context to explain terms or business rules</li>
+                            <li>Temperature: 0.7 for natural responses</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="arrow">↓</div>
+            
+            <div class="step response-section">
+                <div class="step-number">9</div>
+                <div class="step-title">Display Results in Streamlit UI</div>
+                <div class="step-description">
+                    Render the response, code, data, and plots to the user
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📄</span>
+                        <span class="file-name">src/app.py</span>
+                        <span class="file-action">RESULT DISPLAY</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Line 98-101: Extracts response, code, data, image from result</li>
+                            <li>Line 103: <span class="highlight">st.markdown(response_text)</span> displays answer</li>
+                            <li>Line 105-106: <span class="highlight">st.pyplot(image_obj)</span> displays plot if generated</li>
+                            <li>Line 108-113: Displays code and data in expandable sections</li>
+                            <li>Line 116-123: Saves message to session state for chat history</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-section">
+            <h2 style="color: #00d4ff; margin-bottom: 20px;">📊 Data Files Accessed</h2>
+            
+            <div class="step">
+                <div class="step-title">Data Files Used Throughout Execution</div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📊</span>
+                        <span class="file-name">data/DataCoSupplyChainDataset.csv</span>
+                        <span class="file-action">LOADED AT INITIALIZATION</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>95MB supply chain transaction dataset</li>
+                            <li>Loaded by ingestion.py at startup</li>
+                            <li>Stored in memory as pandas DataFrame</li>
+                            <li>Used for all Python and SQL queries</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">📝</span>
+                        <span class="file-name">data/domain_knowledge.txt</span>
+                        <span class="file-action">INDEXED AT INITIALIZATION</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>Supply chain domain definitions and business rules</li>
+                            <li>Chunked and indexed into vector store</li>
+                            <li>Retrieved during RAG step for context</li>
+                        </ul>
+                    </div>
+                </div>
+                
+                <div class="file-call">
+                    <div class="file-call-header">
+                        <span class="file-icon">⚙️</span>
+                        <span class="file-name">.env</span>
+                        <span class="file-action">LOADED AT STARTUP</span>
+                    </div>
+                    <div class="file-details">
+                        <ul>
+                            <li>API keys, endpoints, model configurations</li>
+                            <li>Loaded by config.py using python-dotenv</li>
+                            <li>Used throughout application for LLM and Azure connections</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="flow-summary">
+            <h2>📋 Complete File Call Summary (Per Query)</h2>
+            <ul>
+                <li><strong>app.py</strong> - User input → Result display</li>
+                <li><strong>config.py</strong> - Configuration loading (once at startup)</li>
+                <li><strong>chain.py</strong> - Main orchestrator (all pipeline steps)</li>
+                <li><strong>ingestion.py</strong> - Data loading (once at first query)</li>
+                <li><strong>vector_store.py</strong> - Vector retrieval (every query)</li>
+                <li><strong>sql_tools.py</strong> - SQL execution (if SQL mode)</li>
+                <li><strong>intent_classification.prompty</strong> - Intent classification (every query)</li>
+                <li><strong>code_generation.prompty</strong> OR <strong>sql_generation.prompty</strong> - Code generation (every query)</li>
+                <li><strong>code_evaluation.prompty</strong> - LLM judge (every query)</li>
+                <li><strong>response_synthesis.prompty</strong> - Response synthesis (every query)</li>
+                <li><strong>DataCoSupplyChainDataset.csv</strong> - Data source (loaded once)</li>
+                <li><strong>domain_knowledge.txt</strong> - RAG context (indexed once, retrieved every query)</li>
+            </ul>
+        </div>
+    </div>
+</body>
+</html>

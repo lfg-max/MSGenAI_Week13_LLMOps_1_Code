@@ -1,0 +1,551 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Supply Chain LLMOps - Flow Chart</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px;
+            min-height: 100vh;
+            color: #e0e0e0;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #1e1e30;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        h1 {
+            text-align: center;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+        
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1em;
+        }
+        
+        .layman-section {
+            background: linear-gradient(135deg, #2a2a40 0%, #1a1a2e 100%);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 40px;
+            border: 2px solid #00d4ff;
+        }
+        
+        .layman-title {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .layman-content {
+            color: #ccc;
+            line-height: 1.8;
+            font-size: 1.05em;
+        }
+        
+        .layman-content p {
+            margin-bottom: 15px;
+        }
+        
+        .layman-content strong {
+            color: #00ff88;
+        }
+        
+        .layman-content ul {
+            margin-left: 30px;
+            margin-bottom: 15px;
+        }
+        
+        .layman-content li {
+            margin-bottom: 10px;
+        }
+        
+        .flow-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }
+        
+        .flow-row {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            width: 100%;
+        }
+        
+        .flow-box {
+            background: #2a2a40;
+            border-radius: 12px;
+            padding: 20px;
+            min-width: 200px;
+            max-width: 280px;
+            border: 2px solid #444;
+            position: relative;
+            transition: all 0.3s ease;
+        }
+        
+        .flow-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0, 212, 255, 0.3);
+            border-color: #00d4ff;
+        }
+        
+        .box-number {
+            position: absolute;
+            top: -15px;
+            left: -15px;
+            width: 35px;
+            height: 35px;
+            background: #00d4ff;
+            color: #1a1a2e;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 1.1em;
+        }
+        
+        .box-title {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #00d4ff;
+            margin-bottom: 10px;
+            margin-left: 10px;
+        }
+        
+        .box-file {
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #00ff88;
+            margin-bottom: 8px;
+            background: #16213e;
+            padding: 5px 8px;
+            border-radius: 4px;
+        }
+        
+        .box-desc {
+            font-size: 0.85em;
+            color: #aaa;
+            line-height: 1.4;
+            margin-left: 10px;
+        }
+        
+        .arrow-down {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #00d4ff;
+            font-size: 2em;
+            margin: 10px 0;
+        }
+        
+        .arrow-line {
+            width: 3px;
+            height: 40px;
+            background: linear-gradient(to bottom, #00d4ff, #0088aa);
+        }
+        
+        .arrow-head {
+            width: 0;
+            height: 0;
+            border-left: 15px solid transparent;
+            border-right: 15px solid transparent;
+            border-top: 20px solid #0088aa;
+        }
+        
+        .arrow-right {
+            display: flex;
+            align-items: center;
+            color: #00d4ff;
+            font-size: 2em;
+            margin: 0 10px;
+        }
+        
+        .arrow-line-horizontal {
+            height: 3px;
+            width: 40px;
+            background: linear-gradient(to right, #00d4ff, #0088aa);
+        }
+        
+        .arrow-head-right {
+            width: 0;
+            height: 0;
+            border-top: 15px solid transparent;
+            border-bottom: 15px solid transparent;
+            border-left: 20px solid #0088aa;
+        }
+        
+        .init-box {
+            border-color: #ff6b6b;
+        }
+        
+        .init-box .box-number {
+            background: #ff6b6b;
+        }
+        
+        .init-box .box-title {
+            color: #ff6b6b;
+        }
+        
+        .exec-box {
+            border-color: #00ff88;
+        }
+        
+        .exec-box .box-number {
+            background: #00ff88;
+        }
+        
+        .exec-box .box-title {
+            color: #00ff88;
+        }
+        
+        .rag-box {
+            border-color: #ff00ff;
+        }
+        
+        .rag-box .box-number {
+            background: #ff00ff;
+        }
+        
+        .rag-box .box-title {
+            color: #ff00ff;
+        }
+        
+        .response-box {
+            border-color: #ffaa00;
+        }
+        
+        .response-box .box-number {
+            background: #ffaa00;
+        }
+        
+        .response-box .box-title {
+            color: #ffaa00;
+        }
+        
+        .parallel-label {
+            text-align: center;
+            color: #888;
+            font-size: 0.9em;
+            margin: 10px 0;
+            font-style: italic;
+        }
+        
+        .section-divider {
+            width: 100%;
+            height: 2px;
+            background: linear-gradient(to right, transparent, #00d4ff, transparent);
+            margin: 30px 0;
+        }
+        
+        .legend {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-top: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .legend-box {
+            width: 30px;
+            height: 30px;
+            border: 2px solid;
+            border-radius: 8px;
+        }
+        
+        .legend-label {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚛 Supply Chain LLMOps - Flow Chart</h1>
+        <p class="subtitle">Visual execution flow with file calls and brief descriptions</p>
+        
+        <div class="layman-section">
+            <div class="layman-title">📖 What This App Does (In Simple Terms)</div>
+            <div class="layman-content">
+                <p>Imagine you have a massive spreadsheet with hundreds of thousands of rows of supply chain data - orders, shipments, sales, profits, and more. Normally, you'd need to know complex data analysis tools like Excel, SQL, or Python to get answers from this data.</p>
+                
+                <p><strong>This application solves that problem</strong> by letting you ask questions in plain English, just like you'd ask a human colleague. You can type things like:</p>
+                <ul>
+                    <li>"What is the total sales?"</li>
+                    <li>"Which shipping mode has the highest profit?"</li>
+                    <li>"Show me a chart of sales over time"</li>
+                </ul>
+                
+                <p><strong>Here's how it works behind the scenes:</strong></p>
+                <ul>
+                    <li><strong>AI Understanding:</strong> The app uses AI (GPT) to understand your question in plain English</li>
+                    <li><strong>Smart Code Generation:</strong> It automatically writes the necessary code (Python or SQL) to analyze your data</li>
+                    <li><strong>Safety Check:</strong> Another AI reviews the generated code to make sure it's safe and correct before running it</li>
+                    <li><strong>Execution:</strong> The approved code runs on your data and produces results</li>
+                    <li><strong>Context Awareness:</strong> The app also retrieves relevant business knowledge (like what "late delivery risk" means) to give you better, more informed answers</li>
+                    <li><strong>Natural Response:</strong> Finally, it explains the results back to you in plain English, and can even create charts and graphs</li>
+                </ul>
+                
+                <p><strong>Think of it as having a super-smart data analyst</strong> who knows your supply chain business inside and out, can instantly write complex analysis code, and explains everything in simple language - all through a chat interface.</p>
+            </div>
+        </div>
+        
+        <div class="flow-container">
+            <!-- STARTUP SECTION -->
+            <div class="flow-row">
+                <div class="flow-box init-box">
+                    <div class="box-number">0</div>
+                    <div class="box-title">Application Startup</div>
+                    <div class="box-file">src/app.py</div>
+                    <div class="box-desc">Streamlit starts web server and loads UI</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box init-box">
+                    <div class="box-number">0.1</div>
+                    <div class="box-title">Load Configuration</div>
+                    <div class="box-file">src/config.py</div>
+                    <div class="box-desc">Loads API keys, endpoints, and settings from .env</div>
+                </div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <!-- QUERY SECTION -->
+            <div class="flow-row">
+                <div class="flow-box">
+                    <div class="box-number">1</div>
+                    <div class="box-title">User Query Input</div>
+                    <div class="box-file">src/app.py</div>
+                    <div class="box-desc">User submits natural language question via chat interface</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box exec-box">
+                    <div class="box-number">2</div>
+                    <div class="box-title">Initialize Assistant</div>
+                    <div class="box-file">src/chain.py</div>
+                    <div class="box-desc">Creates SupplyChainAssistant instance (cached)</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="parallel-label">First query only - loads data and components</div>
+            
+            <div class="flow-row">
+                <div class="flow-box exec-box">
+                    <div class="box-number">2.1</div>
+                    <div class="box-title">Load Data</div>
+                    <div class="box-file">src/ingestion.py</div>
+                    <div class="box-desc">Loads CSV dataset and preprocesses columns</div>
+                </div>
+                
+                <div class="flow-box exec-box">
+                    <div class="box-number">2.2</div>
+                    <div class="box-title">Index Knowledge</div>
+                    <div class="box-file">src/vector_store.py</div>
+                    <div class="box-desc">Indexes domain_knowledge.txt into vector store</div>
+                </div>
+                
+                <div class="flow-box exec-box">
+                    <div class="box-number">2.3</div>
+                    <div class="box-title">Setup SQL Engine</div>
+                    <div class="box-file">src/sql_tools.py</div>
+                    <div class="box-desc">Creates DuckDB in-memory database</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="parallel-label">Every query - main pipeline</div>
+            
+            <div class="flow-row">
+                <div class="flow-box exec-box">
+                    <div class="box-number">3</div>
+                    <div class="box-title">Intent Classification</div>
+                    <div class="box-file">prompts/intent_classification.prompty</div>
+                    <div class="box-desc">Determines if query needs Python or SQL</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box exec-box">
+                    <div class="box-number">4</div>
+                    <div class="box-title">Code Generation</div>
+                    <div class="box-file">prompts/code_generation.prompty OR sql_generation.prompty</div>
+                    <div class="box-desc">Generates Python/Pandas or SQL/DuckDB code</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box exec-box">
+                    <div class="box-number">5</div>
+                    <div class="box-title">LLM Judge Evaluation</div>
+                    <div class="box-file">prompts/code_evaluation.prompty</div>
+                    <div class="box-desc">Validates code for safety and correctness</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box exec-box">
+                    <div class="box-number">6</div>
+                    <div class="box-title">Code Execution</div>
+                    <div class="box-file">Python REPL OR src/sql_tools.py</div>
+                    <div class="box-desc">Executes validated code on dataset</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box rag-box">
+                    <div class="box-number">7</div>
+                    <div class="box-title">Vector Retrieval</div>
+                    <div class="box-file">src/vector_store.py</div>
+                    <div class="box-desc">Retrieves relevant domain knowledge (RAG)</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box response-box">
+                    <div class="box-number">8</div>
+                    <div class="box-title">Response Synthesis</div>
+                    <div class="box-file">prompts/response_synthesis.prompty</div>
+                    <div class="box-desc">Combines results and context into natural language</div>
+                </div>
+            </div>
+            
+            <div class="arrow-down">
+                <div class="arrow-line"></div>
+                <div class="arrow-head"></div>
+            </div>
+            
+            <div class="flow-row">
+                <div class="flow-box response-box">
+                    <div class="box-number">9</div>
+                    <div class="box-title">Display Results</div>
+                    <div class="box-file">src/app.py</div>
+                    <div class="box-desc">Renders response, code, data, and plots in UI</div>
+                </div>
+            </div>
+            
+            <div class="section-divider"></div>
+            
+            <!-- DATA SOURCES -->
+            <h2 style="color: #00d4ff; text-align: center; margin-bottom: 20px;">📊 Data Sources</h2>
+            
+            <div class="flow-row">
+                <div class="flow-box">
+                    <div class="box-title">Supply Chain Dataset</div>
+                    <div class="box-file">data/DataCoSupplyChainDataset.csv</div>
+                    <div class="box-desc">95MB transaction data (orders, sales, shipping)</div>
+                </div>
+                
+                <div class="flow-box">
+                    <div class="box-title">Domain Knowledge</div>
+                    <div class="box-file">data/domain_knowledge.txt</div>
+                    <div class="box-desc">Business rules and metric definitions</div>
+                </div>
+                
+                <div class="flow-box">
+                    <div class="box-title">Configuration</div>
+                    <div class="box-file">.env</div>
+                    <div class="box-desc">API keys, endpoints, model settings</div>
+                </div>
+            </div>
+            
+            <!-- LEGEND -->
+            <div class="legend">
+                <div class="legend-item">
+                    <div class="legend-box init-box" style="border-color: #ff6b6b;"></div>
+                    <span class="legend-label">Initialization (once)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box exec-box" style="border-color: #00ff88;"></div>
+                    <span class="legend-label">Execution (every query)</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box rag-box" style="border-color: #ff00ff;"></div>
+                    <span class="legend-label">RAG Retrieval</span>
+                </div>
+                <div class="legend-item">
+                    <div class="legend-box response-box" style="border-color: #ffaa00;"></div>
+                    <span class="legend-label">Response Generation</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
